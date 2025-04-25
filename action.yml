@@ -1,7 +1,7 @@
 # action.yml
 name: 'Shopify Theme Check Reporter'
 description: 'Runs Shopify Theme Check on Pull Requests and posts a formatted report comment on Pull Requests.'
-author: 'ShopLab-Team'
+author: 'ShopLab-Team' # Update with actual author/org
 
 branding:
   icon: 'message-square' # Icon from https://feathericons.com/
@@ -10,7 +10,7 @@ branding:
 # Define inputs for the action
 inputs:
   github-token:
-    description: 'GitHub token for posting comments. Typically ${{ secrets.GITHUB_TOKEN }}'
+    description: 'GitHub token for posting comments. Typically provide using secrets.GITHUB_TOKEN in the workflow.' # Corrected description
     required: true
   fail-on-warnings:
     description: 'Set to "true" to fail the action if warnings are found (in addition to errors).'
@@ -24,7 +24,6 @@ inputs:
     description: 'The specific npm package version for theme check (e.g., @shopify/theme-check-node@latest).'
     required: false
     default: '@shopify/theme-check-node@latest'
-  # Add other inputs here if needed in the future (e.g., config-path)
 
 # Define outputs from the action (populated by the Node.js script)
 outputs:
@@ -50,8 +49,7 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         cache: 'npm'
-        # Assumes lock file is at root or subdirs. Adjust if needed.
-        cache-dependency-path: '**/package-lock.json'
+        cache-dependency-path: '**/package-lock.json' # Assumes lock file exists for caching
 
     # Step 2: Install Theme Check library into the user's checked-out code
     - name: Install Theme Check
@@ -59,14 +57,11 @@ runs:
       shell: bash
       run: |
         echo "Installing Theme Check version ${{ inputs.theme-check-package }}..."
-        # Install project dependencies first if lock file exists
         if [ -f package-lock.json ]; then
           npm ci || (echo "npm ci failed, trying npm install..." && npm install --no-audit --no-fund --legacy-peer-deps)
         else
-          # Install dependencies if no lock file, suppress audit/fund messages
            npm install --no-audit --no-fund --legacy-peer-deps
         fi
-        # Add/Update the specific theme-check package without saving to package.json/lock
         npm install ${{ inputs.theme-check-package }} --no-save --legacy-peer-deps
         echo "Theme Check installation completed"
 
@@ -74,30 +69,21 @@ runs:
     - name: Run Theme Check Script
       id: theme_check_script
       env:
-        # Pass necessary context and inputs to the script
         PR_NUMBER: ${{ github.event.pull_request.number }}
         WORKSPACE_PATH: ${{ github.workspace }}
         REPO_URL: ${{ github.server_url }}/${{ github.repository }}
         COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
         RUN_ID: ${{ github.run_id }}
         FAIL_ON_WARNINGS: ${{ inputs.fail-on-warnings }}
-        # GITHUB_OUTPUT is automatically available
       shell: bash
-      # Use GITHUB_ACTION_PATH to reference the script relative to the action's location
-      # The script's exit code (0 or 1) determines step success/failure
-      run: node ${{ github.action_path }}/scripts/run-theme-check.js
+      run: node ${{ github.action_path }}/scripts/run-theme-check.js # Assumes script is in scripts/
 
     # Step 4: Post the report comment using outputs from the script step
     - name: Post Theme Check Report to PR
       uses: marocchino/sticky-pull-request-comment@v2
-      # Always run this step to post results or errors, but only on PR events
       if: always() && github.event_name == 'pull_request'
       with:
-        # Use the file path output by the script if available
         path: ${{ steps.theme_check_script.outputs.comment_body_file }}
-        # Use the fallback message output if the file path is not set (e.g., script error)
         message: ${{ steps.theme_check_script.outputs.fallback_comment_body }}
-        # Unique header to ensure the comment is updated on subsequent runs
         header: shopify-theme-check-report # Specific header for this action
-        # Pass the user-provided token for authentication
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_TOKEN: ${{ inputs.github-token }} # Pass the token provided by the user
