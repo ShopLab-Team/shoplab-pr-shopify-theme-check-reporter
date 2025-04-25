@@ -48,8 +48,6 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-        cache: 'npm'
-        cache-dependency-path: '**/package-lock.json' # Assumes lock file exists for caching
 
     # Step 2: Install Theme Check library into the user's checked-out code
     - name: Install Theme Check
