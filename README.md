@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Action Repository:** `ShopLab-Team/shoplab-pr-shopify-theme-check-reporter@v1`
+**Action Repository:** `ShopLab-Team/shoplab-pr-shopify-theme-check-reporter@v1.0.0`
 
 ## What it does
 
@@ -59,7 +59,7 @@ jobs:
       # Step 2: Run the Theme Check Reporter Action
       - name: Run Shopify Automated PR Theme Check Reporter
         # Replace with YourUsername/YourRepo@v1 once published
-        uses: ShopLab-Team/shoplab-pr-shopify-theme-check-reporter@v1
+        uses: ShopLab-Team/shoplab-pr-shopify-theme-check-reporter@v1.0.0
         with:
           # Required: Pass the default GITHUB_TOKEN
           github-token: ${{ secrets.GITHUB_TOKEN }}
